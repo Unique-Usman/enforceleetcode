@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "types": ["@tauri-apps/api"],
     "plugins": [
       {
         "name": "next"
