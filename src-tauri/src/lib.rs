@@ -1,5 +1,7 @@
 mod enforceleetcode;
 
+use enforceleetcode::fetch_leetcode_submissions;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -20,6 +22,7 @@ pub fn run() {
 }
 
 #[tauri::command]
-fn print_hello() -> String {
+async fn print_hello() -> String {
+    fetch_leetcode_submissions("Unique_Usman".to_string(), "").await;
     "Hello Wolrd".into()
 }

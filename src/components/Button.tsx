@@ -8,7 +8,7 @@ type MyComponentPage = {
 
 export default function Button({ children }: MyComponentPage) {
   async function handle_click() {
-    let data: string = await invoke("enforce_leetcode");
+    let data: string = await invoke("print_hello");
     setMessage(data);
     setDisplayGreeting(() => {
       true;
