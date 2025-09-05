@@ -1,5 +1,5 @@
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
-use serde_json::{json, Deserializer, Serializer, Value};
+use serde_json::{from_str, json, Deserializer, Serializer, Value};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 
@@ -11,7 +11,7 @@ pub fn enforceleetcode() {}
 pub async fn fetch_leetcode_submissions(
     username: String,
     date_str: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<bool, Box<dyn std::error::Error>> {
     let url = "https://leetcode.com/graphql";
 
     // Build the GraphQL query string
@@ -48,26 +48,16 @@ pub async fn fetch_leetcode_submissions(
             if let Some(calendar_str) = matched_user
                 .get("userCalendar")
                 .and_then(|c| c.get("submissionCalendar"))
+                .and_then(|c| c.as_str())
             {
-                let date = get_timestamp("2025-09-04");
-                // println!("Calendar Str - {:?}", calendar_str);
-                // if let Some(value) = calendar_str.get("1744156800") {
-                //     println!("value of the {value:?}");
-                // }
-
-                if let Some(obj) = calendar_str.as_object() {
-                    for (k, v) in obj {
-                        println!("{} => {}", k, v);
-                    }
+                let calendar_str: Value = from_str(calendar_str)?;
+                if let Some(_) = calendar_str.get(format!("{}", get_timestamp(date_str))) {
+                    return Ok(true);
                 }
             }
         }
     }
-
-    Ok(())
-
-    // if data.get('data') and data['data'].get('matchedUser'):
-    //     calendar_str = data['data']['matchedUser']['userCalendar']['submissionCalendar']
+    Ok(false)
 }
 
 fn get_timestamp(date: &str) -> i64 {
