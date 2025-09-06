@@ -1,7 +1,10 @@
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
 use serde_json::{from_str, json, Deserializer, Serializer, Value};
+use std::process::Output;
+use tauri::AppHandle;
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
+use tauri_plugin_shell::ShellExt;
 
 struct Calendar {}
 
@@ -72,4 +75,26 @@ fn get_timestamp(date: &str) -> i64 {
     // Get Unix timestamp (seconds since 1970-01-01 UTC)
     let timestamp = datetime_utc.timestamp();
     timestamp
+}
+
+fn shutdown_system(app: &AppHandle) -> Result<tauri_plugin_shell::process::Output, String> {
+    let shell = app.shell();
+
+    let command = if cfg!(target_os = "linux") {
+        shell.command("shutdown").args(["now"])
+    } else if cfg!(target_os = "macos") {
+        shell
+            .command("osascript")
+            .args(["-e", "tell app \"System Events\" to shut down"])
+    } else if cfg!(target_os = "windows") {
+        shell.command("shutdown").args(["/s", "/t", "0"])
+    } else {
+        return Err("Unsupported OS".into());
+    };
+
+    let output = tauri::async_runtime::block_on(async move {
+        command.output().await.map_err(|e| e.to_string())
+    })?;
+
+    Ok(output)
 }
