@@ -1,15 +1,10 @@
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
 use serde_json::{from_str, json, Deserializer, Serializer, Value};
 use std::process::Output;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use tauri_plugin_shell::ShellExt;
-
-struct Calendar {}
-
-#[tauri::command]
-pub fn enforceleetcode() {}
 
 pub async fn fetch_leetcode_submissions(
     username: String,
@@ -97,4 +92,44 @@ fn shutdown_system(app: &AppHandle) -> Result<tauri_plugin_shell::process::Outpu
     })?;
 
     Ok(output)
+}
+
+fn save_username(username: String, app: &AppHandle) -> Result<String, String> {
+    let config_dir = app.path().config_dir().unwrap_or(std::path::PathBuf::new());
+    std::fs::create_dir_all(&config_dir).map_err(|e| e.to_string())?;
+
+    // Full path to config.json
+    let config_file = config_dir.join("config.json");
+
+    // Write username
+    std::fs::write(
+        &config_file,
+        format!(r#"{{ "leetcode_username": "{}" }}"#, username),
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok("Username saved!".into())
+}
+
+fn get_username(app: &AppHandle) -> Result<String, String> {
+    // Get OS-standard config directory
+    let config_dir = app
+        .path()
+        .config_dir()
+        .ok_or("Cannot find config directory")?;
+
+    let config_file = config_dir.join("config.json");
+
+    // Read file contents
+    let content = std::fs::read_to_string(config_file).map_err(|e| e.to_string())?;
+
+    // Parse JSON
+    let json: serde_json::Value = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+
+    // Extract username
+    let username = json["leetcode_username"]
+        .as_str()
+        .ok_or("Username not found in config")?;
+
+    Ok(username.to_string())
 }

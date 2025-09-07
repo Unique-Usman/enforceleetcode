@@ -1,13 +1,14 @@
-mod enforceleetcode;
+pub mod enforceleetcode;
 
 use enforceleetcode::fetch_leetcode_submissions;
+use tauri::con
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_http::init())
-        .invoke_handler(tauri::generate_handler![print_hello])
+        .invoke_handler(tauri::generate_handler![get_user_name])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -23,7 +24,6 @@ pub fn run() {
 }
 
 #[tauri::command]
-async fn print_hello() -> String {
-    fetch_leetcode_submissions("Unique_Usman".to_string(), "").await;
-    "Hello Wolrd".into()
+async fn get_user_name(username: String) -> bool {
+    save_user_name()
 }
