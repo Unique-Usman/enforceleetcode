@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-// import { get_user_name } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 
 export default function LeetcodeForm() {
   const [username, setUsername] = useState("");
@@ -13,12 +13,8 @@ export default function LeetcodeForm() {
       return;
     }
     try {
-      // const result = await get_user_name("save_and_check_username", {
-      //   username,
-      // });
-
-      const result = "true";
-      setMessage(result);
+      const result = await invoke<boolean>("get_user_name", { username });
+      setMessage(`${result}`);
     } catch (err) {
       setMessage("❌ Error: " + err);
     }
@@ -48,8 +44,9 @@ export default function LeetcodeForm() {
 
         {message && (
           <p
-            className={`mt-4 text-center font-medium ${message.includes("✅") ? "text-green-600" : "text-red-600"
-              }`}
+            className={`mt-4 text-center font-medium ${
+              message.includes("✅") ? "text-green-600" : "text-red-600"
+            }`}
           >
             {message}
           </p>

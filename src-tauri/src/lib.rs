@@ -1,7 +1,6 @@
 pub mod enforceleetcode;
 
-use enforceleetcode::fetch_leetcode_submissions;
-use tauri::con
+use enforceleetcode::{fetch_leetcode_submissions, save_username};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -24,6 +23,7 @@ pub fn run() {
 }
 
 #[tauri::command]
-async fn get_user_name(username: String) -> bool {
-    save_user_name()
+async fn get_user_name(username: String, app: tauri::AppHandle) -> Result<bool, String> {
+    save_username(username, &app)?;
+    Ok(true)
 }

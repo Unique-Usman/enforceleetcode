@@ -58,7 +58,7 @@ pub async fn fetch_leetcode_submissions(
     Ok(false)
 }
 
-fn get_timestamp(date: &str) -> i64 {
+pub fn get_timestamp(date: &str) -> i64 {
     let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
 
     // Combine with midnight (00:00:00)
@@ -72,7 +72,7 @@ fn get_timestamp(date: &str) -> i64 {
     timestamp
 }
 
-fn shutdown_system(app: &AppHandle) -> Result<tauri_plugin_shell::process::Output, String> {
+pub fn shutdown_system(app: &AppHandle) -> Result<tauri_plugin_shell::process::Output, String> {
     let shell = app.shell();
 
     let command = if cfg!(target_os = "linux") {
@@ -94,7 +94,7 @@ fn shutdown_system(app: &AppHandle) -> Result<tauri_plugin_shell::process::Outpu
     Ok(output)
 }
 
-fn save_username(username: String, app: &AppHandle) -> Result<String, String> {
+pub fn save_username(username: String, app: &AppHandle) -> Result<String, String> {
     let config_dir = app.path().config_dir().unwrap_or(std::path::PathBuf::new());
     std::fs::create_dir_all(&config_dir).map_err(|e| e.to_string())?;
 
@@ -111,12 +111,12 @@ fn save_username(username: String, app: &AppHandle) -> Result<String, String> {
     Ok("Username saved!".into())
 }
 
-fn get_username(app: &AppHandle) -> Result<String, String> {
+pub fn get_username(app: &AppHandle) -> Result<String, String> {
     // Get OS-standard config directory
-    let config_dir = app
-        .path()
-        .config_dir()
-        .ok_or("Cannot find config directory")?;
+    let config_dir = match app.path().config_dir() {
+        Ok(dir) => dir,
+        Err(_) => return Err("Cannot find config directory".into()),
+    };
 
     let config_file = config_dir.join("config.json");
 
