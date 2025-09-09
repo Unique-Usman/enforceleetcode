@@ -1,4 +1,6 @@
-use my_tauri_app::enforceleetcode::{fetch_leetcode_submissions, shutdown_system};
+use your_crate_name::enforceleetcode::{
+    fetch_leetcode_submissions, run_install_script, save_username,
+};
 
 fn main() {
     if !fetch_leetcode_submissions() {

@@ -1,0 +1,4 @@
+○ enforceleetcode.service - EnforceLeetCode Daily Submission Check
+     Loaded: loaded (]8;;file://archlinux/etc/systemd/system/enforceleetcode.service\/etc/systemd/system/enforceleetcode.service]8;;\; [0;1;38:5:185mdisabled[0m; preset: [0;1;38:5:185mdisabled[0m)
+     Active: inactive (dead)
+TriggeredBy: [0;1;32m●[0m enforceleetcode.timer

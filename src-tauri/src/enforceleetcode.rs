@@ -1,5 +1,9 @@
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
+use dirs;
 use serde_json::{from_str, json, Deserializer, Serializer, Value};
+use std::fs;
+use std::path::Path;
+use std::process::Command;
 use std::process::Output;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_http::reqwest;
@@ -132,4 +136,83 @@ pub fn get_username(app: &AppHandle) -> Result<String, String> {
         .ok_or("Username not found in config")?;
 
     Ok(username.to_string())
+}
+
+fn create_systemd_install_script() -> Result<(), String> {
+    // Path to save the script (e.g., user's temp directory)
+    let script_path = std::env::temp_dir().join("install_enforceleetcode.sh");
+
+    // Full path to your Tauri binary
+    let exec_dir = std::env::current_exe()
+        .map_err(|e| e.to_string())?
+        .parent()
+        .ok_or("Failed to get binary directory")?
+        .to_path_buf();
+
+    // Script content
+    let script_content = format!(
+        r#"
+#!/bin/bash
+set -e
+
+SERVICE_PATH=/etc/systemd/system/enforceleetcode.service
+TIMER_PATH=/etc/systemd/system/enforceleetcode.timer
+
+echo "[Unit]
+Description=EnforceLeetCode Daily Submission Check
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={}/background
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target" | sudo tee $SERVICE_PATH
+
+echo "[Unit]
+Description=Run EnforceLeetCode Daily
+
+[Timer]
+OnCalendar=*-*-* 23:59:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target" | sudo tee $TIMER_PATH
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now enforceleetcode.timer
+
+echo "Systemd service and timer installed successfully."
+"#,
+        exec_dir.display()
+    );
+
+    // Write the script
+    fs::write(&script_path, script_content).map_err(|e| e.to_string())?;
+
+    // Make it executable
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&script_path)
+            .map_err(|e| e.to_string())?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&script_path, perms).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+pub fn run_install_script() -> Result<(), String> {
+    create_systemd_install_script()?;
+    let script_path = std::env::temp_dir().join("install_enforceleetcode.sh");
+
+    Command::new("bash")
+        .arg(script_path)
+        .status()
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
 }
